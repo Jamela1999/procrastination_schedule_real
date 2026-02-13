@@ -2,6 +2,7 @@ import MyMap from './components/MyMap.js?v=4';
 import YearlyPlan from './components/YearlyPlan.js?v=4';
 import MonthlyPlan from './components/MonthlyPlan.js?v=4';
 import DailyReport from './components/DailyReport.js?v=4';
+import Storage from './components/Storage.js';
 
 const tabs = [
     { id: 'daily', label: 'Daily Report', icon: 'calendar-check', component: DailyReport },
@@ -11,6 +12,53 @@ const tabs = [
 ];
 
 let currentTabId = 'daily';
+
+function renderDataActions() {
+    const actionsContainer = document.getElementById('data-actions');
+    if (!actionsContainer) return;
+
+    actionsContainer.innerHTML = `
+        <button id="btn-export" title="Export Data (Backup)" class="p-2 rounded-md text-gray-500 hover:text-brand-600 hover:bg-brand-50 transition-colors duration-200">
+            <i data-lucide="download" class="w-5 h-5"></i>
+        </button>
+        <button id="btn-import" title="Import Data (Restore)" class="p-2 rounded-md text-gray-500 hover:text-brand-600 hover:bg-brand-50 transition-colors duration-200">
+            <i data-lucide="upload" class="w-5 h-5"></i>
+        </button>
+        <input type="file" id="import-file-input" accept=".json" class="hidden">
+    `;
+
+    // Export button
+    document.getElementById('btn-export').addEventListener('click', () => {
+        Storage.exportAll();
+    });
+
+    // Import button → triggers hidden file input
+    document.getElementById('btn-import').addEventListener('click', () => {
+        document.getElementById('import-file-input').click();
+    });
+
+    // File input change → read and import
+    document.getElementById('import-file-input').addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            try {
+                const jsonData = JSON.parse(event.target.result);
+                Storage.importAll(jsonData);
+            } catch (error) {
+                alert('Invalid JSON file. Please select a valid backup file.');
+            }
+        };
+        reader.readAsText(file);
+
+        // Reset input so the same file can be selected again
+        e.target.value = '';
+    });
+
+    lucide.createIcons();
+}
 
 function renderTabs() {
     const navContainer = document.getElementById('nav-tabs');
@@ -88,6 +136,9 @@ function switchTab(tabId) {
 document.addEventListener('DOMContentLoaded', () => {
     // Expose switchTab globally so components can use it
     window.switchTab = switchTab;
+
+    // Render data action buttons (Export/Import)
+    renderDataActions();
 
     // Initial Render
     renderTabs();
