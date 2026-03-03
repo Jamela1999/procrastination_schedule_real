@@ -5,7 +5,6 @@ import MyMap from './components/MyMap.js?v=5';
 import YearlyPlan from './components/YearlyPlan.js?v=5';
 import MonthlyPlan from './components/MonthlyPlan.js?v=5';
 import DailyReport from './components/DailyReport.js?v=5';
-import Schedule from './components/Schedule.js';
 import Storage from './components/Storage.js';
 
 // Initialize Firebase
@@ -15,7 +14,6 @@ Storage.initCloud(firebaseApp);
 
 const tabs = [
     { id: 'daily', label: 'Daily Report', icon: 'calendar-check', component: DailyReport },
-    { id: 'schedule', label: 'Weekly Schedule', icon: 'calendar-days', component: Schedule },
     { id: 'monthly', label: 'Monthly Plan', icon: 'calendar', component: MonthlyPlan },
     { id: 'yearly', label: 'Yearly Plan', icon: 'calendar-range', component: YearlyPlan },
     { id: 'mymap', label: 'My Map', icon: 'map', component: MyMap },

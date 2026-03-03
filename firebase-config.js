@@ -1,14 +1,13 @@
 // Firebase Configuration
-// Project: procrastinator-schedule
+// Project: pdca-tracker
 
 const firebaseConfig = {
-    apiKey: "AIzaSyDaF9TVDZJFiCJCBPIQrXhfilzoFba-LBk",
-    authDomain: "procrastinator-schedule.firebaseapp.com",
-    projectId: "procrastinator-schedule",
-    storageBucket: "procrastinator-schedule.firebasestorage.app",
-    messagingSenderId: "422409241612",
-    appId: "1:422409241612:web:d5bdcfb1bce3d630841a29",
-    measurementId: "G-NLGG9C1E3C"
+    apiKey: "AIzaSyD1pSfVCSuURgsY4Vb1oQxKWtPZqh7Sr68",
+    authDomain: "pdca-tracker.firebaseapp.com",
+    projectId: "pdca-tracker",
+    storageBucket: "pdca-tracker.firebasestorage.app",
+    messagingSenderId: "525235659576",
+    appId: "1:525235659576:web:4a689daa53d0fb46d497cd"
 };
 
 export default firebaseConfig;

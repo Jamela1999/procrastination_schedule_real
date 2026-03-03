@@ -1,0 +1,1326 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weekly Schedule</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #f5f5f0;
+            --surface: #fff;
+            --surface2: #fafaf7;
+            --border: #e8e6e1;
+            --border2: #d5d3ce;
+            --text: #2c2c2c;
+            --text-mid: #6b6b6b;
+            --text-lt: #9e9e9e;
+            --accent: #3d3d3d;
+            --shadow: rgba(0, 0, 0, .04)
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            -webkit-font-smoothing: antialiased
+        }
+
+        .topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px 36px 0;
+            flex-wrap: wrap;
+            gap: 10px
+        }
+
+        .topbar-left {
+            display: flex;
+            align-items: baseline;
+            gap: 10px;
+            flex-wrap: wrap
+        }
+
+        .topbar h1 {
+            font-size: 1.35rem;
+            font-weight: 600;
+            letter-spacing: -.02em
+        }
+
+        .topbar .subtitle {
+            font-size: .8rem;
+            color: var(--text-lt)
+        }
+
+        .tabs {
+            display: flex;
+            gap: 0;
+            padding: 12px 36px 0
+        }
+
+        .tab-btn {
+            background: none;
+            border: none;
+            font-family: inherit;
+            font-size: .85rem;
+            font-weight: 500;
+            color: var(--text-lt);
+            padding: 8px 18px;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: color .2s, border-color .2s
+        }
+
+        .tab-btn:hover {
+            color: var(--text-mid)
+        }
+
+        .tab-btn.active {
+            color: var(--text);
+            border-bottom-color: var(--text)
+        }
+
+        .controls-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 36px 0;
+            flex-wrap: wrap;
+            gap: 10px
+        }
+
+        select.week-select,
+        select.chart-week-select {
+            appearance: none;
+            -webkit-appearance: none;
+            background: var(--surface);
+            color: var(--text);
+            border: 1px solid var(--border);
+            padding: 7px 34px 7px 12px;
+            border-radius: 8px;
+            font-size: .82rem;
+            font-family: inherit;
+            font-weight: 500;
+            cursor: pointer;
+            outline: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 10 10'%3E%3Cpath fill='%239e9e9e' d='M2.5 4l2.5 2.5L7.5 4'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+            background-size: 10px;
+            transition: border-color .2s
+        }
+
+        select.week-select:hover,
+        select.chart-week-select:hover {
+            border-color: var(--border2)
+        }
+
+        select.week-select:focus,
+        select.chart-week-select:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(60, 60, 60, .06)
+        }
+
+        /* Legend with progress */
+        .legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            padding: 12px 36px
+        }
+
+        .legend-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+            font-size: .68rem;
+            font-weight: 500;
+            padding: 4px 10px;
+            border-radius: 10px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            color: var(--text-mid);
+            min-width: 60px
+        }
+
+        .legend-top {
+            display: flex;
+            align-items: center;
+            gap: 4px
+        }
+
+        .legend-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            flex-shrink: 0
+        }
+
+        .legend-progress {
+            font-size: .58rem;
+            color: var(--text-lt);
+            font-weight: 400
+        }
+
+        /* Gantt */
+        .gantt-container {
+            padding: 0 36px 36px
+        }
+
+        .week-card {
+            background: var(--surface);
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            overflow: hidden;
+            box-shadow: 0 1px 3px var(--shadow), 0 4px 16px var(--shadow)
+        }
+
+        .week-card-header {
+            padding: 12px 18px;
+            border-bottom: 1px solid var(--border);
+            font-weight: 600;
+            font-size: .88rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--surface2)
+        }
+
+        .week-card-header span {
+            color: var(--text-lt);
+            font-weight: 400;
+            font-size: .76rem
+        }
+
+        .gantt-scroll {
+            overflow-x: auto;
+            padding: 8px 10px 10px
+        }
+
+        .gantt {
+            display: grid;
+            min-width: 920px;
+            user-select: none
+        }
+
+        .time-header {
+            font-size: .58rem;
+            color: var(--text-lt);
+            text-align: center;
+            padding: 3px 0 7px;
+            border-bottom: 1px solid var(--border);
+            font-weight: 500;
+            letter-spacing: .02em
+        }
+
+        .day-label {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 5px 2px;
+            border-bottom: 1px solid var(--border);
+            font-size: .76rem;
+            font-weight: 600
+        }
+
+        .day-label .date-num {
+            font-size: .6rem;
+            color: var(--text-lt);
+            font-weight: 400;
+            margin-top: 1px
+        }
+
+        .day-row {
+            grid-column: 2/-1;
+            position: relative;
+            height: 48px;
+            border-bottom: 1px solid var(--border);
+            display: flex
+        }
+
+        .hour-cell {
+            flex: 1;
+            border-right: 1px solid rgba(0, 0, 0, .04);
+            cursor: pointer;
+            transition: background .12s
+        }
+
+        .hour-cell:last-child {
+            border-right: none
+        }
+
+        .hour-cell:hover {
+            background: rgba(0, 0, 0, .018)
+        }
+
+        /* Events */
+        .event {
+            position: absolute;
+            top: 3px;
+            height: 42px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: .66rem;
+            font-weight: 600;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            padding: 0 14px;
+            cursor: grab;
+            z-index: 2;
+            transition: box-shadow .15s;
+            letter-spacing: .01em
+        }
+
+        .event:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, .1);
+            z-index: 20
+        }
+
+        .event.dragging {
+            cursor: grabbing;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, .15);
+            z-index: 100;
+            opacity: .92
+        }
+
+        .event .resize-left,
+        .event .resize-right {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 8px;
+            cursor: ew-resize;
+            z-index: 5
+        }
+
+        .event .resize-left {
+            left: 0;
+            border-radius: 6px 0 0 6px
+        }
+
+        .event .resize-right {
+            right: 0;
+            border-radius: 0 6px 6px 0
+        }
+
+        .event:hover .resize-left,
+        .event:hover .resize-right {
+            background: rgba(0, 0, 0, .08)
+        }
+
+        .event .tooltip {
+            display: none;
+            position: absolute;
+            bottom: calc(100% + 6px);
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--text);
+            color: #fff;
+            padding: 5px 10px;
+            border-radius: 6px;
+            font-size: .66rem;
+            font-weight: 400;
+            white-space: nowrap;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, .15);
+            z-index: 200;
+            pointer-events: none
+        }
+
+        .event:hover .tooltip,
+        .event.dragging .tooltip {
+            display: block
+        }
+
+        .event .delete-btn {
+            display: none;
+            position: absolute;
+            top: 3px;
+            right: 12px;
+            background: rgba(0, 0, 0, .12);
+            border: none;
+            color: var(--text);
+            font-size: .58rem;
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            cursor: pointer;
+            align-items: center;
+            justify-content: center;
+            line-height: 1
+        }
+
+        .event:hover .delete-btn {
+            display: flex
+        }
+
+        .ev-intern {
+            background: #dce9f3;
+            color: #3a6d94
+        }
+
+        .ev-course {
+            background: #ddeade;
+            color: #3f6e47
+        }
+
+        .ev-french {
+            background: #f5e6d3;
+            color: #9a6a2f
+        }
+
+        .ev-gym {
+            background: #f3dce1;
+            color: #8e4558
+        }
+
+        .ev-dentist {
+            background: #f3d5d5;
+            color: #993a3a
+        }
+
+        .ev-writing {
+            background: #e5ddf0;
+            color: #5e4a80
+        }
+
+        .ev-tutor {
+            background: #f2eacc;
+            color: #7a6520
+        }
+
+        .ev-cram {
+            background: #d3ece2;
+            color: #327a5d
+        }
+
+        .ev-buffer {
+            background: #eaeaea;
+            color: #777
+        }
+
+        /* Modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, .18);
+            backdrop-filter: blur(4px);
+            z-index: 500;
+            align-items: center;
+            justify-content: center
+        }
+
+        .modal-overlay.open {
+            display: flex
+        }
+
+        .modal {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 26px 28px;
+            width: 400px;
+            max-width: 92vw;
+            box-shadow: 0 12px 48px rgba(0, 0, 0, .1);
+            animation: modalIn .22s ease
+        }
+
+        @keyframes modalIn {
+            from {
+                opacity: 0;
+                transform: translateY(8px) scale(.98)
+            }
+        }
+
+        .modal h3 {
+            margin-bottom: 18px;
+            font-size: .95rem;
+            font-weight: 600
+        }
+
+        .modal label {
+            display: block;
+            font-size: .68rem;
+            font-weight: 500;
+            color: var(--text-lt);
+            margin-bottom: 4px;
+            margin-top: 14px;
+            text-transform: uppercase;
+            letter-spacing: .06em
+        }
+
+        .modal input[type=text],
+        .modal select {
+            width: 100%;
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 8px 10px;
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: .82rem;
+            outline: none;
+            transition: border-color .2s
+        }
+
+        .modal input[type=text]:focus,
+        .modal select:focus {
+            border-color: var(--accent)
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 20px
+        }
+
+        .modal-actions button {
+            flex: 1;
+            padding: 9px;
+            border-radius: 8px;
+            border: none;
+            font-family: inherit;
+            font-size: .82rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background .15s
+        }
+
+        .btn-cancel {
+            background: var(--surface2);
+            color: var(--text-mid);
+            border: 1px solid var(--border) !important
+        }
+
+        .btn-cancel:hover {
+            background: #f0efea
+        }
+
+        .btn-add,
+        .btn-primary {
+            background: var(--text);
+            color: #fff
+        }
+
+        .btn-add:hover,
+        .btn-primary:hover {
+            background: #1a1a1a
+        }
+
+        /* Scroll wheel time picker */
+        .time-picker-row {
+            display: flex;
+            gap: 16px;
+            margin-top: 6px;
+            align-items: center;
+            justify-content: center
+        }
+
+        .scroll-picker {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+            user-select: none
+        }
+
+        .scroll-picker .sp-label {
+            font-size: .58rem;
+            color: var(--text-lt);
+            text-transform: uppercase;
+            font-weight: 500;
+            letter-spacing: .05em;
+            margin-bottom: 2px
+        }
+
+        .scroll-picker .sp-btn {
+            width: 36px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            background: var(--surface2);
+            cursor: pointer;
+            font-size: .72rem;
+            color: var(--text-mid);
+            transition: background .12s
+        }
+
+        .scroll-picker .sp-btn:hover {
+            background: var(--border)
+        }
+
+        .scroll-picker .sp-btn:active {
+            background: var(--border2)
+        }
+
+        .scroll-picker .sp-val {
+            font-size: 1.1rem;
+            font-weight: 600;
+            width: 36px;
+            text-align: center;
+            padding: 4px 0
+        }
+
+        .time-sep {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--text-lt);
+            padding-top: 16px
+        }
+
+        /* Toggle list for event selection */
+        .toggle-section {
+            margin-top: 6px
+        }
+
+        .toggle-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            margin-bottom: 8px
+        }
+
+        .toggle-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 5px 12px;
+            border-radius: 20px;
+            border: 1.5px solid var(--border);
+            background: var(--surface2);
+            font-size: .72rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all .15s;
+            color: var(--text-mid);
+            user-select: none
+        }
+
+        .toggle-pill:hover {
+            border-color: var(--border2)
+        }
+
+        .toggle-pill.active {
+            border-color: var(--text);
+            color: var(--text);
+            background: var(--surface);
+            font-weight: 600
+        }
+
+        .toggle-pill .pill-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            flex-shrink: 0
+        }
+
+        .drag-time-indicator {
+            position: fixed;
+            background: var(--text);
+            color: #fff;
+            font-size: .68rem;
+            font-weight: 500;
+            padding: 3px 8px;
+            border-radius: 4px;
+            pointer-events: none;
+            z-index: 300;
+            display: none;
+            white-space: nowrap;
+            font-family: 'Inter', sans-serif
+        }
+
+        .panel {
+            display: none
+        }
+
+        .panel.active {
+            display: block
+        }
+
+        /* Dashboard */
+        .dash-container {
+            padding: 8px 36px 40px
+        }
+
+        .dash-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px
+        }
+
+        @media(max-width:900px) {
+            .dash-grid {
+                grid-template-columns: 1fr
+            }
+        }
+
+        .dash-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 22px 24px;
+            box-shadow: 0 1px 3px var(--shadow)
+        }
+
+        .dash-card h3 {
+            font-size: .88rem;
+            font-weight: 600;
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            gap: 6px
+        }
+
+        .dash-card h3 .icon {
+            font-size: 1rem
+        }
+
+        .dash-card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 14px;
+            flex-wrap: wrap;
+            gap: 8px
+        }
+
+        .dash-card-header h3 {
+            margin-bottom: 0
+        }
+
+        .date-row {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 6px;
+            flex-wrap: wrap
+        }
+
+        .date-row>div {
+            flex: 1;
+            min-width: 140px
+        }
+
+        .date-row label,
+        .dash-label {
+            display: block;
+            font-size: .68rem;
+            font-weight: 500;
+            color: var(--text-lt);
+            margin-bottom: 3px;
+            text-transform: uppercase;
+            letter-spacing: .05em
+        }
+
+        .date-row input[type=date] {
+            width: 100%;
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 8px 10px;
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: .82rem;
+            outline: none
+        }
+
+        .date-row input[type=date]:focus {
+            border-color: var(--accent)
+        }
+
+        .date-info {
+            font-size: .72rem;
+            color: var(--text-lt);
+            margin-top: 6px
+        }
+
+        /* Tag management */
+        .tag-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: .76rem
+        }
+
+        .tag-table th {
+            text-align: left;
+            font-weight: 500;
+            color: var(--text-lt);
+            padding: 6px 8px;
+            border-bottom: 1px solid var(--border);
+            font-size: .66rem;
+            text-transform: uppercase;
+            letter-spacing: .05em
+        }
+
+        .tag-table td {
+            padding: 6px 8px;
+            border-bottom: 1px solid var(--border);
+            vertical-align: middle
+        }
+
+        .tag-table tr.dragging-row {
+            opacity: .5;
+            background: var(--surface2)
+        }
+
+        .tag-table .drag-handle {
+            cursor: grab;
+            color: var(--text-lt);
+            font-size: .8rem;
+            padding-right: 6px;
+            user-select: none
+        }
+
+        .tag-table .drag-handle:active {
+            cursor: grabbing
+        }
+
+        .tag-table .cat-dot {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 6px;
+            vertical-align: middle
+        }
+
+        .tag-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            align-items: center
+        }
+
+        .tag-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+            padding: 2px 8px;
+            border-radius: 12px;
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            font-size: .66rem;
+            font-weight: 500;
+            color: var(--text-mid)
+        }
+
+        .tag-chip .remove-tag {
+            cursor: pointer;
+            font-size: .6rem;
+            color: var(--text-lt);
+            border: none;
+            background: none;
+            font-family: inherit;
+            padding: 0 0 0 2px
+        }
+
+        .tag-chip .remove-tag:hover {
+            color: #c25d5d
+        }
+
+        .add-tag-input {
+            border: 1px solid var(--border);
+            background: var(--surface2);
+            border-radius: 12px;
+            padding: 2px 8px;
+            font-size: .66rem;
+            font-family: inherit;
+            outline: none;
+            width: 64px;
+            color: var(--text)
+        }
+
+        .add-tag-input:focus {
+            border-color: var(--accent);
+            width: 80px
+        }
+
+        .goal-input {
+            width: 52px;
+            border: 1px solid var(--border);
+            background: var(--surface2);
+            border-radius: 6px;
+            padding: 3px 6px;
+            font-size: .72rem;
+            font-family: inherit;
+            outline: none;
+            color: var(--text);
+            text-align: center
+        }
+
+        .goal-input:focus {
+            border-color: var(--accent)
+        }
+
+        .del-cat-btn {
+            cursor: pointer;
+            font-size: .62rem;
+            color: var(--text-lt);
+            border: none;
+            background: none;
+            padding: 4px;
+            border-radius: 4px;
+            transition: color .15s
+        }
+
+        .del-cat-btn:hover {
+            color: #c25d5d
+        }
+
+        /* Tag mgmt */
+        .tag-mgmt-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 10px
+        }
+
+        .tag-mgmt-row input {
+            flex: 1;
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 7px 10px;
+            font-family: inherit;
+            font-size: .78rem;
+            outline: none;
+            color: var(--text)
+        }
+
+        .tag-mgmt-row input:focus {
+            border-color: var(--accent)
+        }
+
+        .tag-mgmt-btn {
+            background: var(--text);
+            color: #fff;
+            border: none;
+            padding: 7px 14px;
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: .76rem;
+            font-weight: 500;
+            cursor: pointer
+        }
+
+        .tag-mgmt-btn:hover {
+            background: #1a1a1a
+        }
+
+        .tag-mgmt-btn.danger {
+            background: #c25d5d
+        }
+
+        .tag-mgmt-btn.danger:hover {
+            background: #a84444
+        }
+
+        .existing-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            margin-top: 8px
+        }
+
+        .existing-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 10px;
+            border-radius: 14px;
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            font-size: .72rem;
+            font-weight: 500;
+            color: var(--text-mid)
+        }
+
+        .existing-tag .del-tag-btn {
+            cursor: pointer;
+            font-size: .62rem;
+            color: var(--text-lt);
+            border: none;
+            background: none;
+            padding: 0 0 0 3px
+        }
+
+        .existing-tag .del-tag-btn:hover {
+            color: #c25d5d
+        }
+
+        /* Add category form */
+        .add-cat-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 12px;
+            padding-top: 10px;
+            border-top: 1px solid var(--border)
+        }
+
+        .add-cat-row input[type=text] {
+            flex: 1;
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 6px 10px;
+            font-family: inherit;
+            font-size: .76rem;
+            outline: none;
+            color: var(--text)
+        }
+
+        .add-cat-row input[type=color] {
+            width: 28px;
+            height: 28px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 1px;
+            cursor: pointer;
+            background: var(--surface2)
+        }
+
+        .add-cat-row button {
+            background: var(--text);
+            color: #fff;
+            border: none;
+            padding: 6px 14px;
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: .74rem;
+            font-weight: 500;
+            cursor: pointer;
+            white-space: nowrap
+        }
+
+        .add-cat-row button:hover {
+            background: #1a1a1a
+        }
+
+        /* Refresh button */
+        .refresh-btn {
+            background: var(--text);
+            color: #fff;
+            border: none;
+            padding: 7px 16px;
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: .76rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background .15s;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px
+        }
+
+        .refresh-btn:hover {
+            background: #1a1a1a
+        }
+
+        /* Charts */
+        .chart-bar-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 7px
+        }
+
+        .chart-label {
+            width: 105px;
+            font-size: .72rem;
+            font-weight: 500;
+            text-align: right;
+            color: var(--text-mid);
+            flex-shrink: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap
+        }
+
+        .chart-bar-wrap {
+            flex: 1;
+            height: 24px;
+            background: var(--surface2);
+            border-radius: 6px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+            position: relative
+        }
+
+        .chart-bar {
+            height: 100%;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            padding-left: 8px;
+            font-size: .64rem;
+            font-weight: 600;
+            color: rgba(0, 0, 0, .45);
+            transition: width .4s ease;
+            min-width: 0
+        }
+
+        .chart-goal-line {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: var(--text);
+            border-radius: 1px;
+            z-index: 2;
+            opacity: .5
+        }
+
+        .chart-value {
+            font-size: .7rem;
+            font-weight: 500;
+            color: var(--text-mid);
+            width: 70px;
+            text-align: left;
+            flex-shrink: 0
+        }
+
+        .chart-empty {
+            font-size: .74rem;
+            color: var(--text-lt);
+            padding: 16px 0;
+            text-align: center
+        }
+
+        /* Confirm dialog */
+        .confirm-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, .2);
+            backdrop-filter: blur(3px);
+            z-index: 600;
+            align-items: center;
+            justify-content: center
+        }
+
+        .confirm-overlay.open {
+            display: flex
+        }
+
+        .confirm-box {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 24px 26px;
+            width: 320px;
+            max-width: 90vw;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, .12);
+            text-align: center;
+            animation: modalIn .2s ease
+        }
+
+        .confirm-box p {
+            font-size: .85rem;
+            margin-bottom: 18px;
+            line-height: 1.5
+        }
+
+        .confirm-box .confirm-actions {
+            display: flex;
+            gap: 8px
+        }
+
+        .confirm-box .confirm-actions button {
+            flex: 1;
+            padding: 9px;
+            border-radius: 8px;
+            border: none;
+            font-family: inherit;
+            font-size: .82rem;
+            font-weight: 500;
+            cursor: pointer
+        }
+
+        @media(max-width:768px) {
+
+            .topbar,
+            .controls-row {
+                padding-left: 16px;
+                padding-right: 16px
+            }
+
+            .legend {
+                padding: 12px 16px
+            }
+
+            .gantt-container,
+            .dash-container {
+                padding-left: 14px;
+                padding-right: 14px
+            }
+
+            .topbar h1 {
+                font-size: 1.15rem
+            }
+
+            .gantt {
+                min-width: 750px
+            }
+
+            .tabs {
+                padding: 10px 16px 0
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="topbar">
+        <div class="topbar-left">
+            <h1>Weekly Schedule</h1><span class="subtitle" id="dateRangeLabel"></span>
+        </div>
+        <div id="auth-section" style="display: flex; align-items: center; gap: 12px;"></div>
+    </div>
+    <div class="tabs"><button class="tab-btn active" data-tab="schedule">Schedule</button><button class="tab-btn"
+            data-tab="dashboard">Dashboard</button></div>
+
+    <!-- SCHEDULE PANEL -->
+    <div class="panel active" id="panel-schedule">
+        <div class="controls-row">
+            <div class="legend" id="legend"></div><select class="week-select" id="weekSelect"></select>
+        </div>
+        <div class="gantt-container">
+            <div class="week-card">
+                <div class="week-card-header" id="weekCardHeader"></div>
+                <div class="gantt-scroll">
+                    <div class="gantt" id="gantt"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- DASHBOARD PANEL -->
+    <div class="panel" id="panel-dashboard">
+        <div class="dash-container">
+            <div class="dash-grid">
+                <div class="dash-card">
+                    <h3><span class="icon">⚙️</span> Date Range</h3>
+                    <div class="date-row">
+                        <div><label>Start Date</label><input type="date" id="inputStartDate" /></div>
+                        <div><label>End Date</label><input type="date" id="inputEndDate" /></div>
+                    </div>
+                    <div class="date-info" id="dateInfo"></div>
+                </div>
+                <div class="dash-card">
+                    <h3><span class="icon">🏷️</span> Manage Tags</h3>
+                    <div class="tag-mgmt-row"><input type="text" id="newTagInput"
+                            placeholder="New tag name..." /><button class="tag-mgmt-btn" id="addTagBtn">Add Tag</button>
+                    </div>
+                    <div class="existing-tags" id="existingTags"></div>
+                </div>
+                <div class="dash-card" style="grid-column:1/-1">
+                    <div class="dash-card-header">
+                        <h3><span class="icon">📋</span> Category Tags &amp; Goals</h3>
+                        <div style="display:flex;align-items:center;gap:8px">
+                            <select class="chart-week-select" id="chartWeekSelect"></select>
+                            <button class="refresh-btn" id="refreshBtn">↻ Refresh</button>
+                        </div>
+                    </div>
+                    <table class="tag-table">
+                        <thead>
+                            <tr>
+                                <th style="width:24px"></th>
+                                <th>Category</th>
+                                <th>Tags</th>
+                                <th style="width:70px">Goal (h)</th>
+                                <th style="width:28px"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="tagTableBody"></tbody>
+                    </table>
+                    <div class="add-cat-row"><input type="text" id="newCatName"
+                            placeholder="New category name..." /><input type="color" id="newCatColor"
+                            value="#c8dbe8" /><button id="addCatBtn">+ Add Category</button></div>
+                </div>
+                <div class="dash-card">
+                    <h3><span class="icon">📊</span> Hours by Category</h3>
+                    <div id="chartCategory"></div>
+                </div>
+                <div class="dash-card">
+                    <h3><span class="icon">📈</span> Hours by Tag</h3>
+                    <div id="chartTag"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Event Modal -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal">
+            <h3>Add Event</h3>
+            <label>Name</label><input type="text" id="modalName" placeholder="e.g. Meeting" />
+            <label>Time</label>
+            <div class="time-picker-row">
+                <div class="scroll-picker"><span class="sp-label">Hour</span>
+                    <div class="sp-btn" id="shUp">▲</div>
+                    <div class="sp-val" id="shVal">8</div>
+                    <div class="sp-btn" id="shDn">▼</div>
+                </div>
+                <span class="time-sep">:</span>
+                <div class="scroll-picker"><span class="sp-label">Min</span>
+                    <div class="sp-btn" id="smUp">▲</div>
+                    <div class="sp-val" id="smVal">00</div>
+                    <div class="sp-btn" id="smDn">▼</div>
+                </div>
+                <span class="time-sep">—</span>
+                <div class="scroll-picker"><span class="sp-label">Hour</span>
+                    <div class="sp-btn" id="ehUp">▲</div>
+                    <div class="sp-val" id="ehVal">9</div>
+                    <div class="sp-btn" id="ehDn">▼</div>
+                </div>
+                <span class="time-sep">:</span>
+                <div class="scroll-picker"><span class="sp-label">Min</span>
+                    <div class="sp-btn" id="emUp">▲</div>
+                    <div class="sp-val" id="emVal">00</div>
+                    <div class="sp-btn" id="emDn">▼</div>
+                </div>
+            </div>
+            <label>Event</label>
+            <div class="toggle-section">
+                <div style="font-size:.66rem;color:var(--text-lt);margin-bottom:4px;font-weight:500">TAG</div>
+                <div class="toggle-group" id="modalTagToggles"></div>
+                <div style="font-size:.66rem;color:var(--text-lt);margin-bottom:4px;font-weight:500">CATEGORY</div>
+                <div class="toggle-group" id="modalCatToggles"></div>
+            </div>
+            <div class="modal-actions"><button class="btn-cancel" id="btnCancel">Cancel</button><button class="btn-add"
+                    id="btnAdd">Add</button></div>
+        </div>
+    </div>
+
+    <!-- Confirm dialog -->
+    <div class="confirm-overlay" id="confirmOverlay">
+        <div class="confirm-box">
+            <p id="confirmMsg"></p>
+            <div class="confirm-actions"><button class="btn-cancel" id="confirmNo">Cancel</button><button
+                    class="tag-mgmt-btn danger" id="confirmYes">Delete</button></div>
+        </div>
+    </div>
+
+    <div class="drag-time-indicator" id="dragIndicator"></div>
+    <script type="module" src="schedule.js"></script>
+</body>
+
+</html>
