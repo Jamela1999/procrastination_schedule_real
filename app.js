@@ -5,7 +5,7 @@ import MyMap from './components/MyMap.js?v=5';
 import YearlyPlan from './components/YearlyPlan.js?v=5';
 import MonthlyPlan from './components/MonthlyPlan.js?v=5';
 import DailyReport from './components/DailyReport.js?v=5';
-import Storage from './components/Storage.js';
+import Storage from './components/Storage.js?v=10';
 
 // Initialize Firebase
 const firebaseApp = initializeApp(firebaseConfig);

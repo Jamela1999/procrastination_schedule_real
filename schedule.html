@@ -1193,6 +1193,12 @@
             <h1>Weekly Schedule</h1><span class="subtitle" id="dateRangeLabel"></span>
         </div>
         <div id="auth-section" style="display: flex; align-items: center; gap: 12px;"></div>
+        <div id="sync-status"
+            style="display: none; align-items: center; gap: 6px; font-size: 0.72rem; color: var(--text-lt); margin-left: 12px; border-left: 1px solid var(--border); padding-left: 12px;">
+            <span id="sync-dot"
+                style="width: 7px; height: 7px; border-radius: 50%; background: #dcdcdc; transition: background 0.3s;"></span>
+            <span id="sync-text">Synced</span>
+        </div>
     </div>
     <div class="tabs"><button class="tab-btn active" data-tab="schedule">Schedule</button><button class="tab-btn"
             data-tab="dashboard">Dashboard</button></div>
@@ -1320,7 +1326,7 @@
     </div>
 
     <div class="drag-time-indicator" id="dragIndicator"></div>
-    <script type="module" src="schedule.js"></script>
+    <script type="module" src="schedule.js?v=10"></script>
 </body>
 
 </html>

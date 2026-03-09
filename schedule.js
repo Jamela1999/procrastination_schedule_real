@@ -1,12 +1,12 @@
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js';
 import { getAuth, signInWithPopup, signOut, onAuthStateChanged, GoogleAuthProvider } from 'https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js';
-import { getFirestore, doc, setDoc, getDoc } from 'https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js';
-import firebaseConfig from './schedule-firebase-config.js';
+import firebaseConfig from './firebase-config.js';
+import Storage from './components/Storage.js';
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
-const db = getFirestore(app);
+Storage.initCloud(app);
 
 /* ═══════════════════════════════════════
    CONSTANTS & UTILITIES
@@ -57,20 +57,17 @@ function cWeeks() {
 }
 
 // ---- Storage Helpers ----
-async function save() {
-    localStorage.setItem(SK, JSON.stringify(D));
-    await syncToCloud();
+function save() {
+    Storage.save(SK, D);
 }
 
 function loadLocal() {
-    const r = localStorage.getItem(SK);
+    const r = Storage.get(SK);
     if (r) {
-        try {
-            D = JSON.parse(r);
-            if (!D.tags) D.tags = DEF_TAGS;
-            D.categories.forEach(c => { if (!c.goals) c.goals = {}; });
-            return true;
-        } catch (e) { }
+        D = r;
+        if (!D.tags) D.tags = DEF_TAGS;
+        D.categories.forEach(c => { if (!c.goals) c.goals = {}; });
+        return true;
     }
     return false;
 }
@@ -83,40 +80,11 @@ function initDefData() {
     save();
 }
 
-// ---- Cloud Sync ----
-async function syncToCloud() {
-    if (!auth.currentUser) return;
-    try {
-        const userDoc = doc(db, 'schedule_users', auth.currentUser.uid);
-        await setDoc(userDoc, {
-            data: D,
-            lastUpdated: new Date().toISOString()
-        });
-        console.log('☁️ Synced to cloud');
-    } catch (e) {
-        console.error('Cloud sync error:', e);
-    }
-}
-
 async function syncFromCloud() {
-    if (!auth.currentUser) return;
-    try {
-        const userDoc = doc(db, 'schedule_users', auth.currentUser.uid);
-        const snap = await getDoc(userDoc);
-        if (snap.exists()) {
-            const cloudData = snap.data().data;
-            if (cloudData) {
-                D = cloudData;
-                localStorage.setItem(SK, JSON.stringify(D));
-                renderAll();
-                console.log('☁️ Synced from cloud');
-            }
-        } else {
-            // First time user with cloud — push local data
-            await syncToCloud();
-        }
-    } catch (e) {
-        console.error('Cloud load error:', e);
+    const synced = await Storage.syncFromCloud();
+    if (synced) {
+        loadLocal();
+        renderAll();
     }
 }
 
@@ -151,8 +119,33 @@ function renderAuthSection() {
 
 onAuthStateChanged(auth, async (user) => {
     renderAuthSection();
+    const syncStatus = document.getElementById('sync-status');
     if (user) {
+        if (syncStatus) syncStatus.style.display = 'flex';
         await syncFromCloud();
+    } else {
+        if (syncStatus) syncStatus.style.display = 'none';
+    }
+});
+
+// ---- Cloud Sync Status Listener ----
+window.addEventListener('cloud-sync-status', (e) => {
+    const sDot = document.getElementById('sync-dot');
+    const sTxt = document.getElementById('sync-text');
+    if (!sDot || !sTxt) return;
+
+    if (e.detail === 'synced') {
+        sTxt.textContent = 'Synced';
+        sDot.style.background = '#4CAF50'; // Green
+        setTimeout(() => {
+            sDot.style.background = '#dcdcdc'; // Neutral
+        }, 3000);
+    } else if (e.detail === 'error') {
+        sTxt.textContent = 'Sync error';
+        sDot.style.background = '#f44336'; // Red
+    } else if (e.detail === 'syncing') {
+        sTxt.textContent = 'Syncing...';
+        sDot.style.background = '#2196F3'; // Blue
     }
 });
 
@@ -376,7 +369,7 @@ function renderTagTable() {
             ch.querySelector('button').onclick = () => { showConfirm(`Remove tag "${tag}" from "${cat.label}"?`, () => { cat.tags = cat.tags.filter(t => t !== tag); save(); renderTagTable(); renderCharts(); }); };
             chips.appendChild(ch);
         });
-        const inp = document.createElement('input'); inp.className = 'add-tag-inline'; inp.placeholder = '+tag';
+        const inp = document.createElement('input'); inp.className = 'add-tag-input'; inp.placeholder = '+tag';
         inp.onkeydown = e => { if (e.key === 'Enter') { const v = inp.value.trim().toLowerCase(); if (v && !(cat.tags || []).includes(v)) { if (!cat.tags) cat.tags = []; cat.tags.push(v); if (!D.tags.includes(v)) D.tags.push(v); save(); renderTagTable(); renderExistingTags(); renderCharts(); } inp.value = ''; } };
         chips.appendChild(inp); tdT.appendChild(chips);
 
@@ -401,11 +394,11 @@ function renderCharts() {
     cCatEl.innerHTML = '';
     D.categories.forEach(c => {
         const h = catH[c.key] || 0, goal = c.goals && c.goals[chartWeek] ? c.goals[chartWeek] : null;
-        const row = document.createElement('div'); row.className = 'chart-row';
+        const row = document.createElement('div'); row.className = 'chart-bar-row';
         const pct = (h / maxC) * 100;
         let goalLine = '', valTxt = `${Math.round(h * 10) / 10}h`;
         if (goal !== null && goal > 0) { const goalPct = Math.min((goal / maxC) * 100, 100); goalLine = `<div class="chart-goal-line" style="left:${goalPct}%"></div>`; valTxt = `${Math.round(h * 10) / 10} / ${goal}h`; }
-        row.innerHTML = `<div class="chart-label">${c.label}</div><div class="chart-bar-bg">${goalLine}<div class="chart-bar-fill" style="width:${pct}%;background:${c.bg}"></div></div><div class="chart-value">${valTxt}</div>`;
+        row.innerHTML = `<div class="chart-label">${c.label}</div><div class="chart-bar-wrap">${goalLine}<div class="chart-bar" style="width:${pct}%;background:${c.bg}"></div></div><div class="chart-value">${valTxt}</div>`;
         cCatEl.appendChild(row);
     });
     const tagH = {}; D.categories.forEach(c => { (c.tags || []).forEach(t => { if (!tagH[t]) tagH[t] = 0; tagH[t] += catH[c.key] || 0; }); });
@@ -415,8 +408,8 @@ function renderCharts() {
     const tClr = { work: '#dce9f3', study: '#e5ddf0', health: '#f3dce1', other: '#eaeaea' }; let ci = 0; const oc = ['#f5e6d3', '#f2eacc', '#d3ece2', '#ddeade'];
     tags.forEach(t => {
         const h = tagH[t] || 0, bg = tClr[t] || (oc[ci++ % oc.length]);
-        const row = document.createElement('div'); row.className = 'chart-row';
-        row.innerHTML = `<div class="chart-label" style="text-transform:uppercase;letter-spacing:.05em">${t}</div><div class="chart-bar-bg"><div class="chart-bar-fill" style="width:${(h / maxT) * 100}%;background:${bg}"></div></div><div class="chart-value">${Math.round(h * 10) / 10}h</div>`;
+        const row = document.createElement('div'); row.className = 'chart-bar-row';
+        row.innerHTML = `<div class="chart-label" style="text-transform:uppercase;letter-spacing:.05em">${t}</div><div class="chart-bar-wrap"><div class="chart-bar" style="width:${(h / maxT) * 100}%;background:${bg}"></div></div><div class="chart-value">${Math.round(h * 10) / 10}h</div>`;
         cTagEl.appendChild(row);
     });
 }
@@ -452,6 +445,7 @@ document.getElementById('refreshBtn').onclick = () => { renderSched(); renderLeg
 wSel.onchange = () => { curW = parseInt(wSel.value); renderSched(); renderLegend(); };
 
 // Init
-if (!loadLocal()) initDefData();
+loadLocal(); // Load what we have locally first
+if (!D.startDate) initDefData();
 renderAll();
 renderAuthSection();
